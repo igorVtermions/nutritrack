@@ -4,6 +4,10 @@ import tokens from './design/tokens.json';
 const config: ExpoConfig = {
   name: 'NutriTrack',
   slug: 'nutritrack',
+  owner: 'igorvtermions',
+  extra: {
+    eas: { projectId: '325a6cb0-11e9-4349-a7fa-94d25a6c2d5e' },
+  },
   version: '0.1.0',
   scheme: 'nutritrack',
   orientation: 'portrait',
