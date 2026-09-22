@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useDiary } from '@/bootstrap/AppProvider';
-import { AppText, Button, Screen, styles } from '@/design-system/components';
+import { AppText, Button, ErrorMessage, Screen, styles } from '@/design-system/components';
 import { AppIcon } from '@/design-system/icons/AppIcon';
 import { colors, space } from '@/design-system/tokens';
 import { progress, sumNutrition } from '@/domain/nutrition/model';
 import { localDate, shiftDate } from '@/shared/date/localDate';
+import { undoDelete } from './model/diaryChanges';
+import { useSubmission } from '@/shared/hooks/useSubmission';
 export function TodayScreen({
   onLog,
   onEntry,
@@ -14,7 +16,8 @@ export function TodayScreen({
   onLog: (date: string) => void;
   onEntry: (id: string) => void;
 }) {
-  const { state } = useDiary();
+  const { state, update } = useDiary();
+  const { submit, pending, error } = useSubmission();
   const [date, setDate] = useState(localDate);
   const entries = state.entries.filter((entry) => entry.date === date);
   const total = sumNutrition(entries);
@@ -22,6 +25,23 @@ export function TodayScreen({
   const ratio = progress(total.calories, state.targets.calories);
   return (
     <Screen bottomInset={false}>
+      {state.deletedEntry && (
+        <View style={styles.card}>
+          <AppText accessibilityLiveRegion="polite">
+            Deleted {state.deletedEntry.name} · {state.deletedEntry.date}
+          </AppText>
+          <ErrorMessage message={error} />
+          <Button
+            label="Undo delete"
+            loading={pending}
+            onPress={() =>
+              void submit(async () => {
+                await update(undoDelete);
+              })
+            }
+          />
+        </View>
+      )}
       <View style={styles.row}>
         <AppIcon name="logo" />
         <AppText variant="section">NutriTrack</AppText>

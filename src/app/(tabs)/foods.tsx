@@ -5,6 +5,7 @@ export default function Foods() {
   const router = useRouter();
   return (
     <CatalogScreen
+      onCreate={() => router.push('/food/create')}
       onSelect={(foodId) =>
         router.push({
           pathname: '/food/[foodId]',

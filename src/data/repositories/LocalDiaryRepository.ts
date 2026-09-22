@@ -1,6 +1,7 @@
 import {
   defaultTargets,
   isNutrition,
+  isFood,
   mealTypes,
   type MealEntry,
 } from '@/domain/nutrition/model';
@@ -41,15 +42,21 @@ function isEntry(value: unknown): value is MealEntry {
     'nutrition' in value &&
     isNutrition(value.nutrition) &&
     'illustration' in value &&
-    (value.illustration === 'oatmeal' || value.illustration === 'salad')
+    (value.illustration === 'oatmeal' ||
+      value.illustration === 'salad' ||
+      value.illustration === 'food')
   );
 }
-function isState(value: unknown): value is DiaryState {
+type LegacyState = Omit<
+  DiaryState,
+  'version' | 'customFoods' | 'favoriteIds' | 'deletedEntry'
+> & { version: 1 | 2 };
+function isLegacyState(value: unknown): value is LegacyState {
   return (
     typeof value === 'object' &&
     value !== null &&
     'version' in value &&
-    value.version === 1 &&
+    (value.version === 1 || value.version === 2) &&
     'onboarded' in value &&
     typeof value.onboarded === 'boolean' &&
     'name' in value &&
@@ -64,6 +71,23 @@ function isState(value: unknown): value is DiaryState {
       value.entries.length
   );
 }
+function isState(value: unknown): value is DiaryState {
+  return (
+    isLegacyState(value) &&
+    value.version === 2 &&
+    'customFoods' in value &&
+    Array.isArray(value.customFoods) &&
+    value.customFoods.every(isFood) &&
+    new Set(value.customFoods.map((food) => food.id)).size ===
+      value.customFoods.length &&
+    'favoriteIds' in value &&
+    Array.isArray(value.favoriteIds) &&
+    value.favoriteIds.every((id) => typeof id === 'string') &&
+    new Set(value.favoriteIds).size === value.favoriteIds.length &&
+    'deletedEntry' in value &&
+    (value.deletedEntry === null || isEntry(value.deletedEntry))
+  );
+}
 export class LocalDiaryRepository implements DiaryRepository {
   private queue: Promise<void> = Promise.resolve();
   constructor(private readonly storage: KeyValueStorage) {}
@@ -71,13 +95,26 @@ export class LocalDiaryRepository implements DiaryRepository {
     const raw = await this.storage.getItem(key);
     if (raw === null)
       return {
-        version: 1,
+        version: 2,
         onboarded: false,
         name: '',
         targets: { ...defaultTargets },
         entries: [],
+        customFoods: [],
+        favoriteIds: [],
+        deletedEntry: null,
       };
     const parsed: unknown = JSON.parse(raw);
+    // Keep the original storage key so existing installations retain their diary.
+    // Migration is persisted with the next successful mutation, never during a read.
+    if (isLegacyState(parsed) && parsed.version === 1)
+      return {
+        ...parsed,
+        version: 2,
+        customFoods: [],
+        favoriteIds: [],
+        deletedEntry: null,
+      };
     if (!isState(parsed))
       throw new Error(
         'Saved data could not be read. Your data has not been changed.',

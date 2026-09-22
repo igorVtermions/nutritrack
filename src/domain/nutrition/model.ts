@@ -11,7 +11,7 @@ export type Food = {
   name: string;
   serving: string;
   nutrition: Nutrition;
-  illustration: 'oatmeal' | 'salad';
+  illustration: 'oatmeal' | 'salad' | 'food';
 };
 export type MealEntry = {
   id: string;
@@ -82,4 +82,44 @@ export function sumNutrition(
 }
 export function progress(consumed: number, target: number): number {
   return target > 0 ? Math.min(1, Math.max(0, consumed / target)) : 0;
+}
+export function isFood(value: unknown): value is Food {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    typeof value.id === 'string' &&
+    value.id.startsWith('custom:') &&
+    'name' in value &&
+    typeof value.name === 'string' &&
+    value.name.trim().length > 0 &&
+    value.name.length <= 120 &&
+    'serving' in value &&
+    typeof value.serving === 'string' &&
+    value.serving.trim().length > 0 &&
+    value.serving.length <= 80 &&
+    'nutrition' in value &&
+    isNutrition(value.nutrition) &&
+    Object.values(value.nutrition).every((n) => n <= 100000) &&
+    'illustration' in value &&
+    value.illustration === 'food'
+  );
+}
+export function resizeEntry(
+  entry: MealEntry,
+  quantity: number,
+  meal: MealType,
+): MealEntry {
+  const base = {
+    calories: entry.nutrition.calories / entry.quantity,
+    protein: entry.nutrition.protein / entry.quantity,
+    carbs: entry.nutrition.carbs / entry.quantity,
+    fat: entry.nutrition.fat / entry.quantity,
+  };
+  return {
+    ...entry,
+    quantity,
+    meal,
+    nutrition: scaleNutrition(base, quantity),
+  };
 }

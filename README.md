@@ -1,424 +1,438 @@
 <p align="center">
-  <img src="assets/images/logo.png" width="96" height="96" alt="Logo NutriTrack: duas folhas verdes" />
+  <img src="assets/images/logo.png" width="96" height="96" alt="NutriTrack logo: two green leaves" />
 </p>
 
 # NutriTrack
 
-**Small steps. Every day.** Aplicativo de acompanhamento alimentar para registrar refeições, visualizar o consumo diário e acompanhar metas pessoais.
+**Small steps. Every day.** A food-tracking app for recording meals, reviewing daily intake, and managing personal targets.
 
-MVP **apenas frontend**, em React Native + Expo Dev Client. Não possui login, Supabase ou backend. Nome, metas e registros ficam no aparelho via AsyncStorage. A interface inicial está em inglês, com tema claro.
+This is a **frontend-only MVP** built with React Native and Expo Dev Client. There is no login, Supabase, or backend. Your name, targets, foods, favorites, and diary are stored on the device with AsyncStorage. The interface is in English and uses a light theme.
 
-[Design no Figma](https://www.figma.com/design/ypPFuD7Ldwf1VYIZo0DuED) · [Contrato de engenharia](docs/MOBILE_ENGINEERING.md) · [Estado da implementação](docs/IMPLEMENTATION_STATUS.md)
+[Figma design](https://www.figma.com/design/ypPFuD7Ldwf1VYIZo0DuED) · [Engineering contract](docs/MOBILE_ENGINEERING.md) · [Implementation status](docs/IMPLEMENTATION_STATUS.md)
 
-## Funcionalidades
+## Features
 
-| Área        | Disponível nesta versão                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------ |
-| Entrada     | Welcome sem conta; conclusão do onboarding salva localmente                                |
-| Today       | Diário inicialmente vazio, navegação entre dias, calorias e macros derivados dos registros |
-| Busca       | Filtro por nome em três alimentos demonstrativos                                           |
-| Registro    | Quantidade por porção e escolha entre Breakfast, Lunch, Dinner e Snack                     |
-| Confirmação | Sucesso exibido somente após salvar                                                        |
-| Detalhes    | Consulta e exclusão de uma refeição com confirmação                                        |
-| History     | Lista dos últimos sete dias e média dos dias anteriores com registros                      |
-| Foods       | Catálogo demonstrativo; ainda não é uma biblioteca pessoal                                 |
-| Settings    | Nome opcional local e metas de calorias/macros editáveis                                   |
-| Estados     | Carregamento, vazio, erros de leitura/gravação, retry e prevenção de envio duplicado       |
+| Area | Implemented behavior |
+| --- | --- |
+| Welcome | Start without an account; onboarding completion is saved locally |
+| Today | Empty first-use diary, date navigation, calories and macros derived from entries |
+| Search | Search example foods and your own foods by name |
+| Food creation | Save a name, an explicit serving description, and nutrition per serving |
+| Food library | Favorites, My foods, and All foods filters |
+| Favorites | Add or remove a food from favorites in its details screen |
+| Logging | Set a serving quantity and choose Breakfast, Lunch, Dinner, or Snack |
+| Confirmation | Show success only after storage confirms the write |
+| Meal editing | Change quantity and meal type using the stored nutrition snapshot |
+| Deletion and undo | Confirm deletion; restore the most recently deleted entry, including after reopening |
+| History | Week/month selection, period navigation, energy chart, exact daily values, and averages |
+| Settings | Optional local name and editable calorie/macro targets |
+| States | Loading, empty results, read/write errors, retry, and duplicate-submission protection |
 
-**Fluxo principal:** Welcome → Today → Log food → Food details → Meal added → Today atualizado.
+**Main flow:** Welcome → Today → Log food → Food details → Meal added → updated diary.
 
-O catálogo contém Oatmeal with berries, Grilled chicken salad e Rolled oats. Os valores são ilustrativos, identificados na interface, e não constituem uma base nutricional validada. Nenhuma refeição fictícia é inserida no diário. As metas iniciais também são exemplos editáveis.
+Create a food from Search or Foods. Once saved, its details open so it can be logged or added to favorites. The serving description is the nutrition basis: for example, values for “100 g” are multiplied by the selected number of servings. There is no implicit conversion between grams, milliliters, cups, or bowls.
 
-Ainda pendentes: edição/desfazer, alimentos próprios, favoritos, gráfico e filtros do histórico. Scanner e receitas ficam fora desta primeira fatia. Não há sincronização, backup remoto ou notificações implementadas.
+The example catalog contains Oatmeal with berries, Grilled chicken salad, and Rolled oats. These foods are labeled as examples and are not a validated nutrition database. Custom foods are labeled separately and use the values you enter. No fictional meals are inserted into the diary. Initial targets are editable examples, not nutritional recommendations.
 
-## Design e telas de referência
+Undo retains **one most recent deletion**. Deleting another meal replaces the previous undo slot. Restoring clears the slot and does not duplicate the entry. Meal editing preserves the record ID, selected diary date, creation time, and food snapshot.
 
-A direção visual foi organizada em **13 frames de 390 × 844**, importados no Figma com textos editáveis e formas vetoriais. Página: `0:1`; prancha: `2:11`.
+Barcode scanning, recipes, cloud synchronization, remote backup, notifications, and authentication are outside this MVP. Editing/deleting custom catalog foods is not implemented.
 
-**As imagens abaixo são referências locais do design usado no Figma, não capturas do app executando.** Correspondem à direção 01 disponível em 22/09/2026. O app ainda apresenta diferenças documentadas, especialmente no histórico, no seletor de refeição e nas configurações.
+## Design and reference screens
 
-O Figma ainda não tem biblioteca completa de componentes, Auto Layout refinado em todas as telas ou protótipo conectado. A consulta durante a implementação foi bloqueada pelo limite MCP Starter. A comparação remota e a revisão visual completa estão pendentes. O arco de Today recebeu uma correção no Figma que pode não estar refletida no SVG local. Consulte [FIGMA-STATUS.md](design/FIGMA-STATUS.md).
+The visual direction consists of **13 mobile frames at 390 × 844**, imported into Figma with editable text and vector shapes. Page: `0:1`; board: `2:11`.
 
-### Entrada e diário
+**The images below are local references used for the Figma design, not screenshots of the running app.** They represent direction 01 from September 22, 2026. Native visual comparison remains pending.
 
-|                                           Welcome · `5:3`                                           |                                             Today · `3:2`                                             |                                      Log food · `5:40`                                       |
-| :-------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------: |
-| <img src="design/screens/01-welcome.svg" width="230" alt="Welcome: marca e botão Start tracking" /> | <img src="design/screens/02-today.svg" width="230" alt="Today: consumo diário, macros e refeições" /> | <img src="design/screens/03-search.svg" width="230" alt="Log food: pesquisa de alimentos" /> |
+The Figma file is an initial design pass, not a complete component library or connected prototype. Some Auto Layout work and full visual QA remain unfinished. Remote access during implementation was blocked by the Starter MCP limit. The Today progress arc was corrected in Figma and may differ from the older SVG. See [FIGMA-STATUS.md](design/FIGMA-STATUS.md).
 
-### Detalhes e histórico
+### Welcome and diary
 
-|                                          Food details · `5:105`                                           |                                        Meal details · `5:152`                                         |                                             History · `5:192`                                             |
-| :-------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: |
-| <img src="design/screens/04-food-detail.svg" width="230" alt="Detalhes de alimento, porção e refeição" /> | <img src="design/screens/05-meal-detail.svg" width="230" alt="Detalhes de uma refeição registrada" /> | <img src="design/screens/06-history.svg" width="230" alt="Referência de histórico com gráfico semanal" /> |
+| Welcome · `5:3` | Today · `3:2` | Log food · `5:40` |
+| :---: | :---: | :---: |
+| <img src="design/screens/01-welcome.svg" width="230" alt="Welcome reference with logo and Start tracking button" /> | <img src="design/screens/02-today.svg" width="230" alt="Today reference with intake, macros, and meals" /> | <img src="design/screens/03-search.svg" width="230" alt="Food search reference" /> |
 
-### Biblioteca e preferências
+### Details and history
 
-|                                       Foods · `5:254`                                        |                                     Settings · `5:320`                                     |                                  Daily targets · `5:386`                                  |
-| :------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: |
-| <img src="design/screens/07-foods.svg" width="230" alt="Referência de biblioteca pessoal" /> | <img src="design/screens/08-settings.svg" width="230" alt="Referência de configurações" /> | <img src="design/screens/09-targets.svg" width="230" alt="Referência de metas diárias" /> |
+| Food details · `5:105` | Meal details · `5:152` | History · `5:192` |
+| :---: | :---: | :---: |
+| <img src="design/screens/04-food-detail.svg" width="230" alt="Food details and serving selection reference" /> | <img src="design/screens/05-meal-detail.svg" width="230" alt="Logged meal details reference" /> | <img src="design/screens/06-history.svg" width="230" alt="Weekly energy chart reference" /> |
 
-### Estados
+### Library and preferences
 
-|                                    Loading · `5:426`                                     |                                  Empty day · `5:469`                                   |                                 Connection error · `5:514`                                 |
-| :--------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------: |
-| <img src="design/screens/10-loading.svg" width="230" alt="Referência de carregamento" /> | <img src="design/screens/11-empty.svg" width="230" alt="Referência de diário vazio" /> | <img src="design/screens/12-error.svg" width="230" alt="Referência de erro recuperável" /> |
+| Foods · `5:254` | Settings · `5:320` | Daily targets · `5:386` |
+| :---: | :---: | :---: |
+| <img src="design/screens/07-foods.svg" width="230" alt="Personal food library reference" /> | <img src="design/screens/08-settings.svg" width="230" alt="Settings reference" /> | <img src="design/screens/09-targets.svg" width="230" alt="Daily targets reference" /> |
 
-<img src="design/screens/13-success.svg" width="230" alt="Meal added: confirmação de registro salvo" />
+### Interface states
 
-**Meal added · `5:540`.** Loading, vazio, erro e sucesso são estados de fluxo, não quatro rotas públicas independentes. O MVP trata erros locais de armazenamento, sem simular conexão com backend.
+| Loading · `5:426` | Empty day · `5:469` | Connection error · `5:514` |
+| :---: | :---: | :---: |
+| <img src="design/screens/10-loading.svg" width="230" alt="Loading skeleton reference" /> | <img src="design/screens/11-empty.svg" width="230" alt="Empty diary reference" /> | <img src="design/screens/12-error.svg" width="230" alt="Recoverable error reference" /> |
 
-### Identidade visual
+<img src="design/screens/13-success.svg" width="230" alt="Meal added confirmation reference" />
 
-| Elemento                            | Referência                                                     |
-| ----------------------------------- | -------------------------------------------------------------- |
-| Fonte                               | Inter: Regular 400, Medium 500, SemiBold 600 e Bold 700 no app |
-| Fundo                               | `#F7F8F3`                                                      |
-| Texto principal / superfície escura | `#20292D`                                                      |
-| Texto secundário                    | `#667078`                                                      |
-| Ação principal / progresso          | `#DEFA64`                                                      |
-| Superfície suave                    | `#EEF5D8`                                                      |
-| Divisórias                          | `#E3E7DF`                                                      |
-| Cards                               | `#FFFFFF`                                                      |
-| Espaçamentos                        | 4, 8, 12, 16, 20, 24 e 32                                      |
-| Raios                               | Controles 12, cards 20, hero 24; botão principal 17            |
-| Botão principal                     | Altura mínima 54                                               |
-| Layout                              | Flexbox, rolagem e safe areas reais; frame não é tamanho fixo  |
+**Meal added · `5:540`.** Loading, empty, error, and success are flow states rather than four independent public routes. The MVP handles local storage failures, not a simulated backend connection error.
 
-Tokens em [design/tokens.json](design/tokens.json), com mapeamento de runtime em [src/design-system/tokens/index.ts](src/design-system/tokens/index.ts). As cores inversas `#BCC5CB` e `#455054` reproduzem o SVG Today e aguardam confirmação remota.
+The create-food form has no dedicated local Figma frame. It reuses the existing field, button, typography, and spacing foundations. Custom foods use the existing food icon rather than an invented illustration. Native visual review of this extension is pending.
 
-Para abrir a prancha local:
+### Visual identity
+
+| Element | Reference |
+| --- | --- |
+| Font | Inter Regular 400, Medium 500, SemiBold 600, and Bold 700 |
+| Canvas | `#F7F8F3` |
+| Primary text / dark surface | `#20292D` |
+| Secondary text | `#667078` |
+| Primary action / progress | `#DEFA64` |
+| Subtle surface | `#EEF5D8` |
+| Dividers | `#E3E7DF` |
+| Cards | `#FFFFFF` |
+| Spacing | 4, 8, 12, 16, 20, 24, and 32 |
+| Corner radii | Controls 12, cards 20, hero 24; primary button 17 |
+| Primary button | Minimum height 54 |
+| Layout | Flexbox, scrolling, real safe areas; the reference frame is not a fixed app size |
+
+Base tokens live in [design/tokens.json](design/tokens.json), with runtime mappings in [src/design-system/tokens/index.ts](src/design-system/tokens/index.ts). Inverse colors `#BCC5CB` and `#455054` match the local Today SVG and await remote confirmation.
+
+To view the local review board:
 
 ```bash
 node design/serve.cjs
 ```
 
-Acesse **http://127.0.0.1:4173**. Esse servidor exibe somente as referências de design; não executa o app.
+Open **http://127.0.0.1:4173**. This server displays the design references only; it does not run the app.
 
-## Stack
+## Technology stack
 
-Versões declaradas no [package.json](package.json). O [package-lock.json](package-lock.json) fixa a instalação reproduzível.
+Versions below are declared in [package.json](package.json). [package-lock.json](package-lock.json) records the resolved dependency tree.
 
-| Camada             | Tecnologia                                        | Uso                                                       |
-| ------------------ | ------------------------------------------------- | --------------------------------------------------------- |
-| Plataforma         | Expo `~57.0.24`                                   | SDK, configuração e builds                                |
-| App nativo         | React Native `0.86.3`                             | Android e iOS                                             |
-| Interface          | React `19.2.3`                                    | Componentes, hooks e Context                              |
-| Linguagem          | TypeScript `~6.0.3`                               | Strict, noUncheckedIndexedAccess e alias `@/`             |
-| Navegação          | Expo Router `~57.0.22`                            | Rotas por arquivos, stack e abas                          |
-| Desenvolvimento    | expo-dev-client `~57.0.19`                        | Development Build                                         |
-| Estilos            | StyleSheet + tokens                               | Componentes próprios; sem NativeWind ou UI kit de produto |
-| Persistência       | AsyncStorage `2.2.0`                              | Documento local versionado                                |
-| Vetores            | react-native-svg `15.15.4`                        | Ícones, ilustrações e arco de progresso                   |
-| Tipografia         | expo-font + @expo-google-fonts/inter              | Quatro arquivos de peso reais                             |
-| Layout nativo      | safe-area-context + screens                       | Insets e navegação nativa                                 |
-| Integrações Expo   | constants, linking, crypto                        | Configuração, links e IDs                                 |
-| Aparência          | splash-screen, status-bar, system-ui              | Splash, barras e modo claro                               |
-| Ecossistema Router | React DOM, Reanimated e Worklets                  | Dependências alinhadas ao SDK                             |
-| Testes             | Jest 29 + jest-expo + Testing Library             | Domínio, armazenamento, hooks e fluxos                    |
-| Qualidade          | ESLint, eslint-config-expo, Prettier, Expo Doctor | Análise estática e compatibilidade                        |
-| Assets             | Sharp `0.35.4`                                    | SVG → PNG apenas em desenvolvimento                       |
-| Automação          | GitHub Actions e EAS                              | CI e perfis de build                                      |
+| Layer | Technology | Purpose |
+| --- | --- | --- |
+| Platform | Expo `~57.0.24` | SDK, configuration, and builds |
+| Native app | React Native `0.86.3` | Android and iOS |
+| UI | React `19.2.3` | Components, hooks, and Context |
+| Language | TypeScript `~6.0.3` | Strict types, noUncheckedIndexedAccess, and `@/` alias |
+| Navigation | Expo Router `~57.0.22` | File-based routes, stack, and tabs |
+| Development | expo-dev-client `~57.0.19` | Development Build runtime |
+| Styling | StyleSheet and shared tokens | Project components; no NativeWind or product UI kit |
+| Persistence | AsyncStorage `2.2.0` | Versioned local document |
+| Vectors | react-native-svg `15.15.4` | Icons, illustrations, progress, and history chart |
+| Typography | expo-font and @expo-google-fonts/inter | Four real font-weight files |
+| Native layout | safe-area-context and screens | Insets and native navigation |
+| Expo integration | constants, linking, crypto | Configuration, links, and record IDs |
+| Appearance | splash-screen, status-bar, system-ui | Splash, system bars, and light theme |
+| Router ecosystem | React DOM, Reanimated, Worklets | Dependencies aligned with the SDK |
+| Testing | Jest 29, jest-expo, Testing Library | Domain, repository, hooks, and flows |
+| Quality | ESLint, eslint-config-expo, Prettier, Expo Doctor | Static analysis and compatibility |
+| Asset tooling | Sharp `0.35.4` | Development-only SVG-to-PNG conversion |
+| Automation | GitHub Actions and EAS | CI and build profiles |
 
-React DOM não significa que uma versão web esteja validada. O alvo é o app nativo com Dev Client. Reanimated e Worklets não introduzem animações adicionais de produto nesta versão.
+React DOM does not mean a web product has been validated. The target is the native app with Dev Client. Reanimated and Worklets do not add product animations in this version.
 
-## Como rodar
+## Running the app
 
-### Pré-requisitos
+### Prerequisites
 
-- **Node.js 24** e npm.
-- Aparelho ou emulador com Development Build compatível.
-- Para compilar Android localmente: Android Studio, Android SDK e JDK compatível. O build registrado usou **JBR 21** do Android Studio.
-- Para iOS local: macOS e Xcode. No Windows, usar EAS, com requisitos de conta/assinatura Apple aplicáveis.
+- **Node.js 24** and npm.
+- A device or emulator with a compatible Development Build.
+- For local Android builds: Android Studio, Android SDK, and a compatible JDK. The recorded build used Android Studio's **JBR 21**.
+- For local iOS builds: macOS and Xcode. On Windows, use EAS with the applicable Apple account/signing requirements.
 
-O MVP não exige arquivo `.env`, credenciais de Supabase ou backend. A conta EAS é de desenvolvimento, não um login do usuário do aplicativo.
+No `.env`, Supabase credentials, or backend setup is required. An EAS account is for development and is not an app-user login.
 
-### Instalar dependências
+### Install dependencies
 
-Na pasta do projeto:
+From the project directory:
 
 ```bash
 npm ci
 ```
 
-### Compilar e instalar Android localmente
+### Build and install Android locally
 
-Com emulador aberto ou aparelho conectado e depuração USB autorizada:
+Start an emulator or connect a device with USB debugging authorized:
 
 ```bash
 npm run android
 ```
 
-Para selecionar um aparelho:
+To select a device:
 
 ```bash
 npm run android -- --device
 ```
 
-No PowerShell, se o Java padrão estiver incompatível, use o JBR do Android Studio, ajustando o caminho conforme a instalação:
+If the default Java installation is incompatible, use Android Studio's JBR in PowerShell, adjusting the path if necessary:
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr'
 npm.cmd run android
 ```
 
-O script executa `expo run:android`, gera o projeto nativo quando necessário, compila e instala o cliente.
+The script runs `expo run:android`, generates the native project when needed, compiles it, and installs the client.
 
-### Iniciar o Metro
+### Start Metro
 
-Se o cliente já estiver instalado:
+With the client already installed:
 
 ```bash
 npm start
 ```
 
-Esse script executa `expo start --dev-client`. Abra o NutriTrack instalado e conecte-o ao servidor exibido no terminal. Em conexão LAN, computador e aparelho precisam estar na mesma rede e ter acesso ao servidor.
+This runs `expo start --dev-client`. Open NutriTrack and connect to the server shown in the terminal. For a LAN connection, the device and computer must be on the same network and able to reach the server.
 
-Se o PowerShell bloquear `npm.ps1` ou `npx.ps1`, use `npm.cmd` e `npx.cmd`.
+If PowerShell blocks `npm.ps1` or `npx.ps1`, use `npm.cmd` and `npx.cmd`.
 
-### iOS local
+### Run iOS locally
 
-Em um Mac preparado:
+On a configured Mac:
 
 ```bash
 npm run ios
 ```
 
-Não houve validação iOS nesta entrega. **Expo Go não é o alvo de validação.**
+iOS validation remains pending. **Expo Go is not this project's validation target.**
 
-### APK local existente
+### Existing local APK
 
-A implementação gerou `artifacts/nutritrack-development-arm64.apk`. Pode existir no workspace original, mas não acompanha um clone, pois binários e `artifacts/` são ignorados pelo Git.
+The initial implementation generated `artifacts/nutritrack-development-arm64.apk`. It may exist in the original workspace, but it is not included in a clone because binaries and `artifacts/` are ignored.
 
-É um **Development Build Android arm64** que depende do Metro. Não é um APK de preview independente.
+This is an **Android arm64 Development Build** and needs Metro. It is not a standalone preview APK. The current feature changes are JavaScript/TypeScript changes and introduce no new native dependencies; use Metro to load the updated code into the compatible client.
 
-## Builds com EAS
+## EAS builds
 
-O perfil de desenvolvimento já existe em [eas.json](eas.json). Para Android na nuvem:
+The development profile exists in [eas.json](eas.json). To build Android in the cloud:
 
 ```bash
 npx eas-cli@latest login
 npx eas-cli@latest build --platform android --profile development
 ```
 
-Depois de instalar:
+After installing the build:
 
 ```bash
 npm start
 ```
 
-Para iOS via EAS:
+For iOS:
 
 ```bash
 npx eas-cli@latest build --platform ios --profile development
 ```
 
-O perfil atual não configura `ios.simulator: true`; não presumir que ele gera um build para simulador.
+The current profile does not set `ios.simulator: true`; do not assume it creates a simulator build.
 
-| Perfil      | Configuração                             | Finalidade                                               |
-| ----------- | ---------------------------------------- | -------------------------------------------------------- |
-| development | developmentClient e distribuição interna | Desenvolver com Metro                                    |
-| preview     | Distribuição interna                     | Build de revisão; ainda não validado nesta entrega       |
-| production  | autoIncrement                            | Build de produção; não publica automaticamente nas lojas |
+| Profile | Configuration | Purpose |
+| --- | --- | --- |
+| development | developmentClient, internal distribution | Development with Metro |
+| preview | Internal distribution | Review build; not yet validated |
+| production | autoIncrement | Production build; does not automatically publish to stores |
 
-Configuração local em [app.config.ts](app.config.ts) e [eas.json](eas.json):
+To request a standalone Android review build using the existing preview profile:
 
-| Campo                                   | Valor                                  |
-| --------------------------------------- | -------------------------------------- |
-| Projeto                                 | `@igorvtermions/nutritrack`            |
-| EAS project ID                          | `325a6cb0-11e9-4349-a7fa-94d25a6c2d5e` |
-| Android package / iOS bundle identifier | `com.nutritrack.prototype`             |
-| Scheme                                  | `nutritrack`                           |
-| Numeração de builds                     | `cli.appVersionSource: remote`         |
+```bash
+npx eas-cli@latest build --platform android --profile preview
+```
 
-É necessário acesso ao projeto EAS configurado. Os identificadores são do protótipo, não identificadores definitivos de publicação aprovados.
+Local configuration in [app.config.ts](app.config.ts) and [eas.json](eas.json):
 
-Como a configuração é dinâmica, o vínculo é declarado em `extra.eas.projectId` no objeto exportado pelo `app.config.ts`. Não envolver esse objeto em outra chave `expo`.
+| Setting | Value |
+| --- | --- |
+| Project | `@igorvtermions/nutritrack` |
+| EAS project ID | `325a6cb0-11e9-4349-a7fa-94d25a6c2d5e` |
+| Android package / iOS bundle identifier | `com.nutritrack.prototype` |
+| Scheme | `nutritrack` |
+| Build numbering | `cli.appVersionSource: remote` |
 
-### Quando reconstruir
+You need access to the configured EAS project. These are prototype identifiers, not approved final publishing identifiers.
 
-Mudanças de TypeScript/JavaScript normalmente usam Metro. Mudanças em módulos nativos, config plugins ou configuração nativa exigem novo build. Para atualizar a geração Android explicitamente:
+Because the Expo configuration is dynamic, the link is declared in `extra.eas.projectId` inside the object exported by `app.config.ts`. Do not wrap that object in another `expo` key.
+
+### When to rebuild
+
+JavaScript/TypeScript changes normally use Metro. Native dependencies, config plugins, and native configuration changes require a new client build. To explicitly regenerate Android:
 
 ```bash
 npx expo prebuild --platform android --no-install
 npm run android
 ```
 
-O projeto usa **Expo Continuous Native Generation**: `android/` e `ios/` são gerados e ignorados. Mantenha configurações em `app.config.ts`/plugins e preserve alterações manuais existentes. Não usar `prebuild --clean` como solução automática.
+The project uses **Expo Continuous Native Generation**. `android/` and `ios/` are generated and ignored. Keep configuration in `app.config.ts`/plugins, preserve existing manual changes, and do not use `prebuild --clean` as an automatic troubleshooting step.
 
-### Problemas comuns
+### Troubleshooting
 
-| Sintoma                                            | Verificação                                                         |
-| -------------------------------------------------- | ------------------------------------------------------------------- |
-| EAS não consegue escrever na configuração dinâmica | Conferir extra.eas.projectId e owner no app.config.ts               |
-| Nenhum dispositivo encontrado                      | Iniciar AVD ou conectar aparelho com depuração USB autorizada       |
-| Erro de Java/Gradle                                | Conferir JAVA_HOME e JDK compatível                                 |
-| App não encontra Metro                             | Executar npm start e conferir endereço/rede                         |
-| Módulo nativo ausente após instalar pacote         | Gerar e instalar novo Dev Client                                    |
-| Erro ao carregar dados                             | Usar retry; o app não sobrescreve conteúdo inválido silenciosamente |
-| Logo do splash ausente                             | Conferir assets/images/logo.png e plugin expo-splash-screen         |
+| Symptom | Check |
+| --- | --- |
+| EAS cannot write dynamic configuration | Check extra.eas.projectId and owner in app.config.ts |
+| No device found | Start an AVD or connect a device with USB debugging authorized |
+| Java/Gradle error | Check JAVA_HOME and JDK compatibility |
+| App cannot reach Metro | Run npm start and check the address/network |
+| Missing native module after installing a package | Build and install a new Dev Client |
+| Saved data cannot be loaded | Use retry; invalid data is not silently overwritten |
+| Missing splash logo | Check assets/images/logo.png and the splash plugin configuration |
 
-## Scripts e qualidade
+## Scripts and quality
 
-| Comando                | Ação                                  |
-| ---------------------- | ------------------------------------- |
-| `npm start`            | Metro com Dev Client                  |
-| `npm run android`      | Compilar e executar Android           |
-| `npm run ios`          | Compilar e executar iOS               |
-| `npm run typecheck`    | TypeScript sem emissão                |
-| `npm run lint`         | ESLint, hooks e restrições de imports |
-| `npm run format:check` | Verificar formatação                  |
-| `npm run format`       | Aplicar Prettier                      |
-| `npm test -- --ci`     | Executar testes em série              |
-| `npm run doctor`       | Compatibilidade e configuração Expo   |
+| Command | Action |
+| --- | --- |
+| `npm start` | Metro in Dev Client mode |
+| `npm run android` | Compile and run Android |
+| `npm run ios` | Compile and run iOS |
+| `npm run typecheck` | TypeScript without emission |
+| `npm run lint` | ESLint, hooks, and import restrictions |
+| `npm run format:check` | Check formatting |
+| `npm run format` | Apply Prettier |
+| `npm test -- --ci` | Run tests serially |
+| `npm run doctor` | Expo configuration and dependency checks |
 
-A [CI](.github/workflows/quality.yml) roda em push/pull request: instala pelo lockfile e executa tipos, lint, formatação e testes. Expo Doctor é separado e pode exigir rede.
+[CI](.github/workflows/quality.yml) runs on pushes and pull requests: it installs from the lockfile and checks types, lint, formatting, and tests. Expo Doctor is separate and may require network access.
 
-Os testes cobrem cálculos nutricionais, datas locais, validação e serialização do armazenamento, falhas de escrita, busca, prevenção de duplicação e integração do registro. Persistência simulada não substitui reabrir o app em um aparelho com AsyncStorage real.
+Tests cover nutrition calculations, local dates, migration, serialized storage, failed writes, search, duplicate prevention, food creation, favorites, meal editing, undo, and history periods. Storage adapters are simulated in tests; this does not replace reopening the app on a device with real AsyncStorage.
 
-## Estrutura do projeto
+## Project structure
 
 ```text
-.github/workflows/quality.yml   CI de qualidade
-assets/images/logo.png         Logo do splash e README
+.github/workflows/quality.yml   Quality CI
+assets/images/logo.png         Splash and README logo
 design/
-  screens/                     13 referências SVG
-  icons/                       Ícones originais
-  tokens.json                  Tokens base
-  00-foundations.svg           Fundamentos visuais
-  screen-map.json              Notas dos fluxos
-  FIGMA-STATUS.md               Estado do Figma
-  index.html                   Prancha local
-  serve.cjs                    Servidor da prancha
-  build.cjs                    Gerador dos artefatos de design
+  screens/                     13 SVG references
+  icons/                       Original icons
+  tokens.json                  Base design tokens
+  00-foundations.svg           Visual foundations
+  screen-map.json              Flow notes
+  FIGMA-STATUS.md               Figma status
+  index.html                   Local review board
+  serve.cjs                    Review server
+  build.cjs                    Design artifact generator
 docs/
-  MOBILE_ENGINEERING.md        Contrato de engenharia
-  IMPLEMENTATION_STATUS.md     Evidências e pendências
-  decisions/001-local-mvp.md   Decisão de persistência
+  MOBILE_ENGINEERING.md        Engineering contract
+  IMPLEMENTATION_STATUS.md     Evidence and pending work
+  decisions/                   Local storage and schema decisions
 scripts/
-  extract-design-assets.cjs    Extrai SVGs e gera PNG da marca
+  extract-design-assets.cjs    Extract vectors and generate the logo PNG
 src/
-  app/                         Rotas e layouts Expo Router
-  bootstrap/                   Providers, hidratação e dependências
+  app/                         Expo Router routes and layouts
+  bootstrap/                   Providers, hydration, dependency composition
   data/
-    fixtures/                  Catálogo demonstrativo
-    repositories/              Armazenamento local
+    fixtures/                  Example food catalog
+    repositories/              Local persistence and migration
   design-system/
-    components/                Texto, botão, campo, tela, cabeçalho e erro
-    icons/                     Assets extraídos e wrapper SVG
-    tokens/                    Cores, fontes, espaçamentos e raios
-  domain/nutrition/             Tipos e cálculos puros
+    components/                Text, buttons, fields, screens, choices, errors
+    icons/                     Extracted assets and SVG wrapper
+    tokens/                    Colors, typography, spacing, radii
+  domain/nutrition/             Pure types and calculations
   features/
     onboarding/                Welcome
-    diary/                     Today, detalhes e contrato do repositório
-    food-catalog/              Busca e registro
-    history/                   Histórico semanal simples
-    settings/                  Nome e metas
+    diary/                     Diary, editing, deletion, undo, repository contract
+    food-catalog/              Search, custom foods, favorites, logging
+    history/                   Week/month summaries and energy chart
+    settings/                  Name and targets
   shared/
-    date/                      Datas locais
-    hooks/                     Controle de envio
-AGENTS.md                      Regras do repositório
-app.config.ts                  Configuração Expo e vínculo EAS
-eas.json                       Perfis de build
-eslint.config.js               Regras estáticas
-jest.config.js                 Configuração dos testes
-tsconfig.json                  Tipagem e alias
-package.json                   Scripts e dependências
-package-lock.json              Versões resolvidas
-.gitignore                     Exclusões de versionamento
-.prettierignore                 Exclusões de formatação
-.prettierrc.json                Estilo de formatação
+    date/                      Local calendar dates
+    hooks/                     Submission control
+AGENTS.md                      Repository working rules
+app.config.ts                  Expo configuration and EAS link
+eas.json                       Build profiles
+eslint.config.js               Static analysis
+jest.config.js                 Test configuration
+tsconfig.json                  TypeScript and path alias
+package.json                   Dependencies and scripts
+package-lock.json              Resolved dependency versions
+.gitignore                     Version-control exclusions
+.prettierignore                 Formatting exclusions
+.prettierrc.json                Formatting preferences
 ```
 
-Testes ficam próximos do código em arquivos `.test.ts`/`.test.tsx`. Projetos nativos, `.expo/`, builds, logs, caches, arquivos de ambiente e credenciais de assinatura não são versionados. Código, assets, design, documentos e lockfile permanecem no Git.
+Tests live next to the code in `.test.ts`/`.test.tsx` files. Generated native projects, `.expo/`, builds, logs, caches, local environment files, and signing credentials are ignored. Source code, assets, design references, documentation, and the lockfile remain versioned.
 
-### Rotas e arquitetura
+### Routes and architecture
 
-| Rota                       | Responsabilidade                            |
-| -------------------------- | ------------------------------------------- |
-| src/app/_layout.tsx        | Fontes, splash, provider e stack raiz       |
-| src/app/index.tsx          | Welcome ou redirecionamento após hidratação |
-| src/app/(tabs)/_layout.tsx | Abas Today, History, Foods e Settings       |
-| src/app/food/search.tsx    | Busca preservando a data selecionada        |
-| src/app/food/[foodId].tsx  | Detalhe e registro de alimento              |
-| src/app/meal/[entryId].tsx | Consulta e exclusão do registro             |
-| src/app/targets.tsx        | Metas                                       |
+| Route file | Responsibility |
+| --- | --- |
+| src/app/_layout.tsx | Fonts, splash, provider, root stack |
+| src/app/index.tsx | Welcome or redirect after hydration |
+| src/app/(tabs)/_layout.tsx | Today, History, Foods, Settings |
+| src/app/food/search.tsx | Search while preserving the selected diary date |
+| src/app/food/create.tsx | Create a food, then open its details |
+| src/app/food/[foodId].tsx | Food details and logging |
+| src/app/meal/[entryId].tsx | Meal details, inline editor, deletion, undo |
+| src/app/targets.tsx | Target editing |
 
-Rotas são adaptadores finos. Telas usam hooks/contexto, domínio puro e contratos de repositório. Componentes visuais não acessam AsyncStorage, SQL ou HTTP. O bootstrap conecta o repositório concreto ao app.
+Routes are thin adapters. Screens use hooks/context, pure domain rules, and repository contracts. Visual components do not access AsyncStorage, SQL, or HTTP directly. Bootstrap connects the concrete repository to the app.
 
-## Dados locais e regras de domínio
+## Local data and domain rules
 
-O [LocalDiaryRepository](src/data/repositories/LocalDiaryRepository.ts) salva JSON na chave **`nutritrack:diary:v1`**:
+[LocalDiaryRepository](src/data/repositories/LocalDiaryRepository.ts) stores JSON under **`nutritrack:diary:v1`**. The key stays unchanged for existing installations; the document schema is now **version 2**.
 
-| Campo     | Conteúdo                                   |
-| --------- | ------------------------------------------ |
-| version   | Versão do documento, atualmente 1          |
-| onboarded | Entrada inicial concluída                  |
-| name      | Nome opcional, sem conta associada         |
-| targets   | Calorias, proteína, carboidratos e gordura |
-| entries   | Refeições registradas                      |
+| Field | Content |
+| --- | --- |
+| version | Document schema version, currently 2 |
+| onboarded | Whether Welcome has been completed |
+| name | Optional local name |
+| targets | Calories, protein, carbs, and fat |
+| entries | Logged meals |
+| customFoods | User-created foods with nutrition per explicit serving |
+| favoriteIds | IDs of favorite foods |
+| deletedEntry | Most recently deleted meal, or null |
 
-Uma entrada guarda ID, alimento, descrição, porção, quantidade, refeição, data local, instante de criação, ilustração e **snapshot nutricional consumido**. Mudanças futuras no catálogo não recalculam silenciosamente os registros anteriores.
+A valid version-1 document is migrated in memory by adding empty custom-food/favorite collections and a null undo slot. The migrated document is written on the next successful mutation. Reads never erase or rewrite stored data. Unknown versions and malformed documents produce a recoverable error.
 
-- Mutações são serializadas para evitar perda de alterações concorrentes.
-- Sucesso só é confirmado após salvar.
-- Dados inválidos ou versão desconhecida geram erro, sem limpeza automática.
-- O documento é versionado; não há migrações entre versões implementadas ainda.
-- Quantidades devem ser positivas e finitas; nutrientes e metas não podem ser negativos.
-- Escala e soma não fazem arredondamento intermediário.
-- O arco limita apenas o progresso visual; o texto informa consumo acima da meta.
-- A data local escolhida é separada do instante de criação.
-- A média semanal exclui hoje parcial e dias sem registros.
+Each meal stores an ID, food reference, description, serving, quantity, meal type, local diary date, creation timestamp, illustration, and **consumed nutrition snapshot**. Editing quantity derives the new amount from that snapshot rather than the current catalog.
 
-AsyncStorage é persistente local e não oferece criptografia própria. Não há backup nem sincronização implementados. Desinstalar ou limpar os dados pode remover o diário. Não guardar credenciais nesse documento.
+- Mutations are serialized to avoid lost concurrent updates.
+- Success is shown only after persistence succeeds.
+- Failed writes preserve confirmed state and allow retry.
+- Quantities must be finite, positive, and at most 1,000 servings.
+- Custom food nutrients must be finite and between 0 and 100,000 per serving.
+- Nutrients and targets cannot be negative.
+- Scaling and totals do not round intermediate values.
+- Only the visual progress arc is clamped; text reports intake above target.
+- Diary dates are local calendar dates, separate from creation timestamps.
+- Weeks start on Monday; months use their actual calendar length.
+- Averages include past days with entries, including explicitly logged zero, and exclude today, future days, and missing days.
 
-## Materiais, assets e convenções
+AsyncStorage provides local persistence without its own encryption. No remote backup or sync is implemented. Uninstalling the app or clearing its data may remove the diary. Do not store credentials in this document.
 
-Antes de alterar código, leia [AGENTS.md](AGENTS.md) e [MOBILE_ENGINEERING.md](docs/MOBILE_ENGINEERING.md). Para UI, consulte também [FIGMA-STATUS.md](design/FIGMA-STATUS.md), os tokens e o SVG correspondente.
+## Assets and engineering conventions
 
-- Preservar identidade, ícones e ilustrações; não usar a tela inteira como imagem.
-- Reutilizar tokens/componentes e separar apresentação, domínio e armazenamento.
-- Usar TypeScript estrito, sem any ou supressões para esconder falhas.
-- Considerar teclado, safe areas, rolagem, texto ampliado e acessibilidade.
-- Implementar ações reais, erros recuperáveis e prevenção de duplicação.
-- Não adicionar backend, autenticação ou serviços remotos sem novo escopo.
+Before changing code, read [AGENTS.md](AGENTS.md) and [MOBILE_ENGINEERING.md](docs/MOBILE_ENGINEERING.md). For UI, also consult [FIGMA-STATUS.md](design/FIGMA-STATUS.md), tokens, and the relevant SVG.
 
-Para regenerar assets:
+- Preserve visual identity, icons, and illustrations; never render an entire screen as an image.
+- Reuse tokens/components and separate presentation, domain, and persistence.
+- Keep strict TypeScript; do not hide failures with any or suppression comments.
+- Handle keyboard, safe areas, scrolling, larger text, and accessibility.
+- Implement real actions, recoverable errors, and duplicate protection.
+- Do not introduce backend services or authentication without a new scope decision.
+- Keep this README in English. Engineering decision documents may remain in Portuguese.
+
+To regenerate assets:
 
 ```bash
 node scripts/extract-design-assets.cjs
 npx prettier --write src/design-system/icons/assets.ts
 ```
 
-O script extrai vetores locais para [assets.ts](src/design-system/icons/assets.ts) e gera [logo.png](assets/images/logo.png) com Sharp. Não redesenha as ilustrações. O PNG está no projeto; não é necessário executar a conversão para rodar o app.
+The script extracts local vectors into [assets.ts](src/design-system/icons/assets.ts) and generates [logo.png](assets/images/logo.png) using Sharp. It does not redraw illustrations. The PNG is already included; conversion is not required to run the app.
 
-Inter usa licença OFL; Sharp, Apache-2.0; Expo, React Native e as principais bibliotecas, MIT. Consulte os pacotes para os termos completos. O projeto é marcado private no npm e não possui arquivo LICENSE definindo licença própria de distribuição.
+Inter uses OFL, Sharp uses Apache-2.0, and Expo, React Native, and the main libraries use MIT. Check package licenses for complete terms. The npm package is private; no project LICENSE file currently defines distribution terms.
 
-Referências técnicas: [Development Builds](https://docs.expo.dev/develop/development-builds/introduction/), [armazenamento](https://docs.expo.dev/develop/user-interface/store-data/) e [versionamento EAS](https://docs.expo.dev/build-reference/app-versions/).
+Technical references: [Development Builds](https://docs.expo.dev/develop/development-builds/introduction/), [storage](https://docs.expo.dev/develop/user-interface/store-data/), and [EAS versioning](https://docs.expo.dev/build-reference/app-versions/).
 
-## Validação e próximos passos
+## Validation and remaining work
 
-Resultados registrados na implementação em **22/09/2026**, não uma nova execução dos testes durante a edição deste README:
+See [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) for dated results and limitations.
 
-| Verificação                               | Resultado registrado                                                            |
-| ----------------------------------------- | ------------------------------------------------------------------------------- |
-| TypeScript, ESLint e Prettier             | Aprovados                                                                       |
-| Testes                                    | 20 aprovados em 6 suítes                                                        |
-| Expo Doctor                               | 21/21 aprovados                                                                 |
-| Bundle Android                            | Gerado pelo Metro                                                               |
-| Development Build Android arm64           | Compilado                                                                       |
-| Aparelho e persistência real após reabrir | Pendente                                                                        |
-| Comparação visual app/Figma               | Pendente                                                                        |
-| Build e teste iOS                         | Pendente                                                                        |
-| npm audit                                 | 14 ocorrências moderadas transitivas; nenhuma alta/crítica na rodada registrada |
+The initial implementation passed TypeScript, ESLint, Prettier, 20 tests, and all 21 Expo Doctor checks, and produced an Android arm64 Development Build. The current iteration extends those checks for migration, editing, undo, custom foods, favorites, and history. Native execution and visual fidelity must still be verified on a device.
 
-As correções automáticas sugeridas pelo audit envolviam versões incompatíveis/antigas do SDK; não foi aplicado audit fix --force. Detalhes em [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+The recorded npm audit reported 14 moderate transitive findings and no high/critical findings. Suggested automatic fixes involved incompatible/older SDK versions; audit fix --force was not applied.
 
-Próximas etapas:
+Remaining work:
 
-1. Instalar o Dev Client em Android e validar registro, retorno ao diário e persistência.
-2. Comparar as telas com as referências e corrigir diferenças visuais e de acessibilidade.
-3. Completar edição/desfazer, alimentos próprios e favoritos.
-4. Implementar gráfico e filtros do histórico.
-5. Validar iOS e preparar build de demonstração independente.
+1. Run the updated flows on Android and verify persistence after closing/reopening the app.
+2. Compare native screenshots with Figma, including compact screens, larger text, keyboard, and screen-reader behavior.
+3. Refine visual differences, loading skeletons, selectors, and chart styling against the reference.
+4. Validate iOS and a standalone preview build.
+5. Consider custom-food editing/deletion only as an additional product iteration.
 
-A existência das 13 referências visuais não significa que todas estejam finalizadas no aplicativo.
+The presence of 13 design references does not mean all visual details have been validated in the native app.

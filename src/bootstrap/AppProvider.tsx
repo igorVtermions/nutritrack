@@ -73,7 +73,11 @@ export function AppProvider({ children }: PropsWithChildren) {
   }
   return (
     <Context.Provider
-      value={{ state: result.state, update, catalog: demoCatalog }}
+      value={{
+        state: result.state,
+        update,
+        catalog: [...demoCatalog, ...result.state.customFoods],
+      }}
     >
       {children}
     </Context.Provider>

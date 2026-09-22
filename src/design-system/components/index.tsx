@@ -35,7 +35,8 @@ export function AppText({
 export function Screen({
   children,
   bottomInset = true,
-}: PropsWithChildren<{ bottomInset?: boolean }>) {
+  scroll = true,
+}: PropsWithChildren<{ bottomInset?: boolean; scroll?: boolean }>) {
   return (
     <SafeAreaView
       style={styles.safe}
@@ -49,12 +50,16 @@ export function Screen({
         style={styles.safe}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          {children}
-        </ScrollView>
+        {scroll ? (
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={{ flex: 1 }}>{children}</View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

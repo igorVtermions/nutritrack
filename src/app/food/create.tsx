@@ -1,18 +1,15 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CatalogScreen } from '@/features/food-catalog/CatalogScreen';
+import { CreateFoodScreen } from '@/features/food-catalog/CreateFoodScreen';
 import { isLocalDate, localDate } from '@/shared/date/localDate';
-export default function Search() {
+export default function CreateFood() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const date = isLocalDate(params.date) ? params.date : localDate();
   return (
-    <CatalogScreen
-      onCreate={() =>
-        router.push({ pathname: '/food/create', params: { date } })
-      }
+    <CreateFoodScreen
       onBack={() => router.back()}
-      onSelect={(foodId) =>
-        router.push({ pathname: '/food/[foodId]', params: { foodId, date } })
+      onCreated={(foodId) =>
+        router.replace({ pathname: '/food/[foodId]', params: { foodId, date } })
       }
     />
   );

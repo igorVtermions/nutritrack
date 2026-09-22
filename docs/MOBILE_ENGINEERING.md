@@ -16,6 +16,8 @@ Termos normativos:
 
 A interface inicial é em inglês. Nomes de código, rotas, componentes e testes também são em inglês. Documentação de engenharia pode ser em português. Não inventar autenticação, assinatura, sincronização, scanner ou recomendações nutricionais como requisitos já aprovados.
 
+O `README.md` deve ser mantido em inglês, conforme instrução explícita do usuário. A evolução do esquema local para versão 2 está documentada em `docs/decisions/002-local-schema-v2.md`.
+
 ## 2. Fonte de verdade visual
 
 Figma: https://www.figma.com/design/ypPFuD7Ldwf1VYIZo0DuED

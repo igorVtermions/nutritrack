@@ -19,6 +19,7 @@ import {
   type MealType,
 } from '@/domain/nutrition/model';
 import { useSubmission } from '@/shared/hooks/useSubmission';
+import { ChoiceGroup } from '@/design-system/components/ChoiceGroup';
 export function FoodDetailsScreen({
   foodId,
   date,
@@ -30,7 +31,9 @@ export function FoodDetailsScreen({
   onBack: () => void;
   onDone: () => void;
 }) {
-  const { catalog, update } = useDiary();
+  const { catalog, state, update } = useDiary();
+  const favorite = state.favoriteIds.includes(foodId);
+  const favoriteSubmission = useSubmission();
   const food = catalog.find((item) => item.id === foodId);
   const [quantity, setQuantity] = useState('1');
   const [meal, setMeal] = useState<MealType>('Dinner');
@@ -78,9 +81,28 @@ export function FoodDetailsScreen({
           { alignItems: 'center', backgroundColor: colors.soft },
         ]}
       >
-        <AppIcon name={food.illustration} size={136} />
+        <AppIcon
+          name={food.illustration}
+          size={food.illustration === 'food' ? 48 : 136}
+        />
       </View>
       <AppText variant="section">{food.name}</AppText>
+      <ErrorMessage message={favoriteSubmission.error} />
+      <Button
+        label={favorite ? 'Remove from favorites' : 'Save to favorites'}
+        secondary
+        loading={favoriteSubmission.pending}
+        onPress={() =>
+          void favoriteSubmission.submit(async () => {
+            await update((current) => ({
+              ...current,
+              favoriteIds: current.favoriteIds.includes(foodId)
+                ? current.favoriteIds.filter((id) => id !== foodId)
+                : [...current.favoriteIds, foodId],
+            }));
+          })
+        }
+      />
       <View style={styles.hero}>
         <AppText variant="section" style={{ color: colors.white }}>
           {valid ? Math.round(food.nutrition.calories * number) : '—'} kcal
@@ -96,6 +118,7 @@ export function FoodDetailsScreen({
         keyboardType="decimal-pad"
         value={quantity}
         onChangeText={setQuantity}
+        editable={!pending}
       />
       {!valid && (
         <AppText accessibilityRole="alert">
@@ -103,18 +126,17 @@ export function FoodDetailsScreen({
         </AppText>
       )}
       <AppText variant="label">Meal · {date}</AppText>
-      <View style={{ gap: space.sm }}>
-        {mealTypes.map((value) => (
-          <Button
-            key={value}
-            label={`${meal === value ? 'Selected: ' : ''}${value}`}
-            secondary={meal !== value}
-            onPress={() => setMeal(value)}
-          />
-        ))}
-      </View>
+      <ChoiceGroup
+        label="Meal"
+        options={mealTypes}
+        value={meal}
+        onChange={setMeal}
+        disabled={pending}
+      />
       <AppText variant="caption" muted>
-        Example food values for this prototype.
+        {food.id.startsWith('custom:')
+          ? 'Your food · nutrition values entered by you.'
+          : 'Example food values for this prototype.'}
       </AppText>
       <ErrorMessage message={error} />
       <Button

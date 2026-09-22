@@ -2,6 +2,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { CatalogScreen } from './CatalogScreen';
 jest.mock('@/bootstrap/AppProvider', () => ({
   useDiary: () => ({
+    state: { favoriteIds: [] },
     catalog: [
       {
         id: 'oats',
@@ -16,7 +17,13 @@ jest.mock('@/bootstrap/AppProvider', () => ({
 jest.mock('@/design-system/icons/AppIcon', () => ({ AppIcon: () => null }));
 test('filters local foods and shows a real empty search result', () => {
   const onSelect = jest.fn();
-  const screen = render(<CatalogScreen onSelect={onSelect} />);
+  const screen = render(
+    <CatalogScreen
+      onSelect={onSelect}
+      onCreate={jest.fn()}
+      onBack={jest.fn()}
+    />,
+  );
   fireEvent.press(screen.getByText('Rolled oats'));
   expect(onSelect).toHaveBeenCalledWith('oats');
   fireEvent.changeText(
