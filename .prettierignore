@@ -1,0 +1,11 @@
+node_modules
+.expo
+android
+ios
+dist
+coverage
+artifacts
+design
+package-lock.json
+AGENTS.md
+docs/MOBILE_ENGINEERING.md

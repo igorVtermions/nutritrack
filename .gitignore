@@ -1,0 +1,48 @@
+# Dependencias e caches
+node_modules/
+.npm/
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# Expo e saidas de build
+.expo/
+/dist/
+/web-build/
+/artifacts/
+expo-env.d.ts
+*.apk
+*.aab
+*.ipa
+*.app/
+*.dSYM/
+
+# Projetos nativos gerados pelo Expo CNG
+/android/
+/ios/
+.gradle/
+.cxx/
+
+# Testes e logs
+/coverage/
+*.log
+
+# Ambiente local e credenciais de assinatura
+.env*
+!.env.example
+!.env.*.example
+credentials.json
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+*.orig.*
+
+# Arquivos locais do sistema e editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+*.swp
+*.swo

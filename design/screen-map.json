@@ -1,0 +1,67 @@
+[
+  {
+    "id": "01-welcome",
+    "name": "Welcome",
+    "note": "Entrada sem cadastro obrigatório para a demonstração. Start tracking → Today vazio."
+  },
+  {
+    "id": "02-today",
+    "name": "Today",
+    "note": "Log food → Search; refeições → Meal details; Add dinner pré-seleciona Dinner. Data abre seletor. Jantar é acionável."
+  },
+  {
+    "id": "03-search",
+    "name": "Log food",
+    "note": "Buscar filtra resultados; selecionar alimento → Food details. Scanner e criar alimento são extensões, não telas implementadas nesta primeira rodada."
+  },
+  {
+    "id": "04-food-detail",
+    "name": "Food details",
+    "note": "Quantidade e refeição editáveis. Add → confirmação e Today atualizado. Valores ilustrativos, não uma base nutricional validada."
+  },
+  {
+    "id": "05-meal-detail",
+    "name": "Meal details",
+    "note": "Editar reutiliza o formulário; excluir exige confirmação e oferece desfazer."
+  },
+  {
+    "id": "06-history",
+    "name": "History",
+    "note": "Média dos seis dias completos: 1.861,7, exibida arredondada a 1.860. Hoje parcial fica explícito. Sem linguagem de culpa ou sucesso baseada em comer menos."
+  },
+  {
+    "id": "07-foods",
+    "name": "Foods",
+    "note": "Biblioteca pessoal e favoritos. Recipes / Create a food entram na próxima rodada, se necessários ao escopo do cliente."
+  },
+  {
+    "id": "08-settings",
+    "name": "Settings",
+    "note": "Daily targets → Goals. Nome fictício. Não pressupõe login ou sincronização já construídos."
+  },
+  {
+    "id": "09-targets",
+    "name": "Daily targets",
+    "note": "Metas demonstrativas editáveis; nenhuma recomendação clínica. Energia e metas de macros independentes; explicar discrepâncias no produto final."
+  },
+  {
+    "id": "10-loading",
+    "name": "Loading",
+    "note": "Skeleton estático mantém geometria. Anunciar carregamento a leitores de tela; movimento opcional respeita reduzir movimento."
+  },
+  {
+    "id": "11-empty",
+    "name": "First day",
+    "note": "Primeiro uso, sem gráfico vazio ambíguo. Primeiro registro → estado preenchido."
+  },
+  {
+    "id": "12-error",
+    "name": "Connection error",
+    "note": "Erro recuperável preserva busca. Não mostrar resultados falsos quando a consulta falhar."
+  },
+  {
+    "id": "13-success",
+    "name": "Meal added",
+    "note": "Confirmação após salvar; o protótipo final pode usar toast em vez de tela dedicada. Volta atualiza consumo para 1.210 kcal e saldo para 790."
+  }
+]
